@@ -21,3 +21,8 @@ The config file (sma2mqtt.yaml) must be changed before use.
 ## Future
 Since the script works for me, I will probably not invest any more time. However, I am open to pull requests.
 It would be nice if someone could turn the script into a home assistant integration.
+
+
+## Images
+![](https://raw.githubusercontent.com/littleyoda/Home-Assistant-Tripower-X-MQTT/main/images/inverter.png)
+![](https://raw.githubusercontent.com/littleyoda/Home-Assistant-Tripower-X-MQTT/main/images/ha.png)
