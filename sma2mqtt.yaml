@@ -1,0 +1,8 @@
+InverterUsername: username
+InverterPassword: "passwd" 
+InverterAdress: 192.168.xxx.yyy
+MqttServer: 192.168.xxx.yyy
+MqttPrefix: homeassistant
+MqttUser: mqtt_username
+MqttPassword: mqtt_password
+UpdateTimeSec: 30
