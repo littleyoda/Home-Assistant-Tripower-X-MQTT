@@ -6,7 +6,9 @@ For other inverter and even for other SMA inverter series, the script will most 
 The Python script is a _proof of concept_. I have been using the script myself for a few successful weeks now.
 
 The script cannot currently be executed as an add-on or similar in Home Assistant. It has to be started manually on a computer with installed Python.
-  
+
+Most values are only returned if the PV system also produces electricity. At times when no electricity is produced, only a fraction of the measured values are returned.
+
 ## Usage
 The following packages are required: 
 * ha-mqtt-discoverable 
