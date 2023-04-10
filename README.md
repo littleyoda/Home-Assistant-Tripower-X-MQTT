@@ -14,7 +14,7 @@ The following packages are required:
 * ha-mqtt-discoverable 
 * pyyaml
 
-      pip install ha-mqtt-discoverable pyyaml
+      pip install ha-mqtt-discoverable==0.4.1 pyyaml
 
 The script accesses the web interface of the inverter. It extracts the displayed measured values at regular intervals and transfers them to Home Assistant via [MQTT Discovery](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery).
 
