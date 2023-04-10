@@ -3,6 +3,7 @@ import json
 import time
 import requests
 import yaml
+import sys
 from yaml.loader import SafeLoader
 
 
@@ -36,7 +37,6 @@ def isfloat(num):
 
 with open('sma2mqtt.yaml') as f:
     cfg = yaml.load(f, Loader=SafeLoader)
-    print(cfg)
 
 loginurl = 'http://' + cfg["InverterAdress"] + '/api/v1/token'
 postdata = {'grant_type': 'password',
@@ -45,8 +45,16 @@ postdata = {'grant_type': 'password',
          }
 
 # Login & Extract Access-Token
-x = requests.post(loginurl, data = postdata, timeout=5)
-print(x.text)
+try:
+    x = requests.post(loginurl, data = postdata, timeout=5)
+except requests.exceptions.ConnectTimeout:
+    print("Inverter not reachable via HTTP.")
+    print("Please test the following URL in a browser: " + 'http://' + cfg["InverterAdress"])
+    sys.exit(1)
+if (x.headers["Content-Length"] == '0'):
+    print("Username or Password wrong.")
+    print("Please test the following URL in a browser: " + 'http://' + cfg["InverterAdress"])
+    sys.exit(1)
 token = x.json()["access_token"] 
 headers = { "Authorization" : "Bearer " + token }
 
@@ -73,53 +81,56 @@ device = Device(settings=configd)
 
 
 while True:
-    url = 'http://' + cfg["InverterAdress"] + '/api/v1/measurements/live'
-    x = requests.post(url, headers = headers, data='[{"componentId":"IGULD:SELF"}]')
-    # Check if a new acccess token is neccesary (TODO use refresh token)
-    if (x.status_code == 401):
-        x = requests.post(loginurl, data = postdata)
-        token = x.json()["access_token"] 
-        headers = { "Authorization" : "Bearer " + token }
-        continue
-    
-    print(x.text)
-    print(x.status_code)
-    data = x.json()
+    try:
+        url = 'http://' + cfg["InverterAdress"] + '/api/v1/measurements/live'
+        x = requests.post(url, headers = headers, data='[{"componentId":"IGULD:SELF"}]')
 
-    for d in data:
-        print(d)
-        dname = d["channelId"].replace("Measurement.","").replace("[]", "")
-        if "value" in d["values"][0]:
-            print("Single")
-            v = d["values"][0]["value"]
-            if isfloat(v):
-                v = round(v,2)
-            print(dname + ": " + str(v))
-            device.add_metric(
-                name= dname,
-                value=v,
-                configuration={"name": dname},
-                unit_of_measurement = unit_of_measurement(dname)
-            )
-        elif "values" in d["values"][0]:
-            print("Multi")
-            for idx in range(0, len(d["values"][0]["values"])):
-                v = d["values"][0]["values"][idx]
+        # Check if a new acccess token is neccesary (TODO use refresh token)
+        if (x.status_code == 401):
+            x = requests.post(loginurl, data = postdata)
+            token = x.json()["access_token"] 
+            headers = { "Authorization" : "Bearer " + token }
+            continue
+        
+        print(x.text)
+        print(x.status_code)
+        data = x.json()
+
+        for d in data:
+            print(d)
+            dname = d["channelId"].replace("Measurement.","").replace("[]", "")
+            if "value" in d["values"][0]:
+                print("Single")
+                v = d["values"][0]["value"]
                 if isfloat(v):
                     v = round(v,2)
-                idxname = dname + "." + str(idx + 1)
-                print(idxname + ": " + str(v))
+                print(dname + ": " + str(v))
                 device.add_metric(
-                    name= idxname,
+                    name= dname,
                     value=v,
-                    configuration={"name": idxname} ,
+                    configuration={"name": dname},
                     unit_of_measurement = unit_of_measurement(dname)
                 )
-        else:
-            # Value current not available // night?
-            pass
+            elif "values" in d["values"][0]:
+                print("Multi")
+                for idx in range(0, len(d["values"][0]["values"])):
+                    v = d["values"][0]["values"][idx]
+                    if isfloat(v):
+                        v = round(v,2)
+                    idxname = dname + "." + str(idx + 1)
+                    print(idxname + ": " + str(v))
+                    device.add_metric(
+                        name= idxname,
+                        value=v,
+                        configuration={"name": idxname} ,
+                        unit_of_measurement = unit_of_measurement(dname)
+                    )
+            else:
+                # Value current not available // night?
+                pass
 
-    device.publish()
-    time.sleep(cfg["UpdateTimeSec"])
-
+        device.publish()
+        time.sleep(cfg["UpdateTimeSec"])
+    except TimeoutError:
+        pass
 
