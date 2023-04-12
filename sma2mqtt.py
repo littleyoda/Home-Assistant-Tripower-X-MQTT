@@ -51,7 +51,7 @@ except requests.exceptions.ConnectTimeout:
     print("Inverter not reachable via HTTP.")
     print("Please test the following URL in a browser: " + 'http://' + cfg["InverterAdress"])
     sys.exit(1)
-if (x.headers["Content-Length"] == '0'):
+if ("Content-Length" in x.headers and x.headers["Content-Length"] == '0'):
     print("Username or Password wrong.")
     print("Please test the following URL in a browser: " + 'http://' + cfg["InverterAdress"])
     sys.exit(1)
