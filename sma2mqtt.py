@@ -4,13 +4,25 @@ import time
 import requests
 import yaml
 import sys
+import logging
 from yaml.loader import SafeLoader
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def unit_of_measurement(name):
     if (name.endswith("TmpVal")):
         return "°C"
     if (".W." in name):
+        return "W"
+    if (".TotWh" in name):
+        return "Wh"
+    if (name.endswith(".TotW")):
+        return "W"
+    if (name.endswith(".TotW.Pv")):
         return "W"
     if (name.endswith(".Watt")):
         return "W"
@@ -22,7 +34,7 @@ def unit_of_measurement(name):
         return "V"
     if (name.endswith(".VA.")):
         return "VA"
-    print(name)
+    logging.debug("No unit of measurement for " + name)    
     return ""
 
 def isfloat(num):
@@ -79,8 +91,10 @@ configd = {
 }
 device = Device(settings=configd)
 
-
-while True:
+exitafter = cfg.get("ExitAfter", None)
+while exitafter is None or exitafter > 0:
+    if exitafter: 
+        exitafter -= 1
     try:
         url = 'http://' + cfg["InverterAdress"] + '/api/v1/measurements/live'
         x = requests.post(url, headers = headers, data='[{"componentId":"IGULD:SELF"}]')
@@ -92,19 +106,14 @@ while True:
             headers = { "Authorization" : "Bearer " + token }
             continue
         
-        print(x.text)
-        print(x.status_code)
         data = x.json()
 
         for d in data:
-            print(d)
             dname = d["channelId"].replace("Measurement.","").replace("[]", "")
             if "value" in d["values"][0]:
-                print("Single")
                 v = d["values"][0]["value"]
                 if isfloat(v):
                     v = round(v,2)
-                print(dname + ": " + str(v))
                 device.add_metric(
                     name= dname,
                     value=v,
@@ -112,13 +121,11 @@ while True:
                     unit_of_measurement = unit_of_measurement(dname)
                 )
             elif "values" in d["values"][0]:
-                print("Multi")
                 for idx in range(0, len(d["values"][0]["values"])):
                     v = d["values"][0]["values"][idx]
                     if isfloat(v):
                         v = round(v,2)
                     idxname = dname + "." + str(idx + 1)
-                    print(idxname + ": " + str(v))
                     device.add_metric(
                         name= idxname,
                         value=v,
@@ -129,6 +136,7 @@ while True:
                 # Value current not available // night?
                 pass
 
+        logging.info("Publishing to Home Assistant")
         device.publish()
         time.sleep(cfg["UpdateTimeSec"])
     except TimeoutError:
