@@ -1,9 +1,19 @@
-InverterUsername: username
-InverterPassword: "passwd" 
-InverterAdress: 192.168.xxx.yyy
-InverterPrefix: "TrPo15-"
-MqttServer: 192.168.xxx.yyy
-MqttPrefix: homeassistant
-MqttUser: mqtt_username
-MqttPassword: mqtt_password
-UpdateTimeSec: 30
+Devices:
+- Type: tripowerX
+  Username: "user"
+  Password: "pwd"
+  Address: 192.168.2.xxx
+  SensorPrefix: "TrPo15-"
+  UpdateTimeSec: 10
+
+- Type: EM
+  SensorPrefix: "SHM2-"
+  UpdateTimeSec: 10
+
+Mqtt:
+  Server: 192.168.2.xxx
+  SensorPrefix: homeassistant
+  User: "user"
+  Password: "pwd"
+
+#ExitAfter: 6
