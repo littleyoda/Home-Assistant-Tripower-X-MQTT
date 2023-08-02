@@ -204,7 +204,7 @@ def updatePowerMeter(cfg, mqtt_settings):
 
 
 
-cfgfile = 'sma2mqtt.yaml' if (len(sys.argv) == 0)  else sys.argv[1]
+cfgfile = 'sma2mqtt.yaml' if (len(sys.argv) == 1)  else sys.argv[1]
 print(cfgfile)
 print(sys.argv)
 with open(cfgfile) as f:
