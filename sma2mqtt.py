@@ -13,6 +13,10 @@ import struct
 from yaml.loader import SafeLoader
 from speedwiredecoder import decode_speedwire
 
+import urllib3
+
+urllib3.disable_warnings()
+
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.ERROR,
@@ -67,7 +71,7 @@ def sendUpdate(name, unique_id, uofm, mqtt_settings, device_info, value):
 
 def updateTripower(cfg, mqtt_settings):
     logging.info("Starting Tripower-X Thread")
-    loginurl = 'http://' + cfg["Address"] + '/api/v1/token'
+    loginurl = 'https://' + cfg["Address"] + '/api/v1/token'
     postdata = {'grant_type': 'password',
             'username': cfg["Username"],
             'password': cfg["Password"],
@@ -75,25 +79,25 @@ def updateTripower(cfg, mqtt_settings):
 
     # Login & Extract Access-Token
     try:
-        x = requests.post(loginurl, data = postdata, timeout=5)
+        x = requests.post(loginurl, data = postdata, timeout=5, verify=False)
     except requests.exceptions.ConnectTimeout:
         print("Inverter not reachable via HTTP.")
-        print("Please test the following URL in a browser: " + 'http://' + cfg["Address"])
+        print("Please test the following URL in a browser: " + 'https://' + cfg["Address"])
         sys.exit(1)
     if ("Content-Length" in x.headers and x.headers["Content-Length"] == '0'):
         print("Username or Password wrong.")
-        print("Please test the following URL in a browser: " + 'http://' + cfg["Address"])
+        print("Please test the following URL in a browser: " + 'https://' + cfg["Address"])
         sys.exit(1)
     token = x.json()["access_token"] 
     headers = { "Authorization" : "Bearer " + token }
 
     # Request Device Info
-    url="http://" + cfg["Address"] + "/api/v1/plants/Plant:1/devices/IGULD:SELF"
-    x = requests.get(url, headers = headers)
+    url="https://" + cfg["Address"] + "/api/v1/plants/Plant:1/devices/IGULD:SELF"
+    x = requests.get(url, headers = headers, verify=False)
     dev = x.json()
 
     device_info = DeviceInfo(name=dev["product"], 
-                            configuration_url='http://' + cfg["Address"], 
+                            configuration_url='https://' + cfg["Address"], 
                             identifiers=dev["serial"], 
                             model = dev["vendor"]+"-" + dev["product"],
                             manufacturer = dev["vendor"],
@@ -107,12 +111,12 @@ def updateTripower(cfg, mqtt_settings):
         if exitafter: 
             exitafter -= 1
         try:
-            url = 'http://' + cfg["Address"] + '/api/v1/measurements/live'
-            x = requests.post(url, headers = headers, data='[{"componentId":"IGULD:SELF"}]')
+            url = 'https://' + cfg["Address"] + '/api/v1/measurements/live'
+            x = requests.post(url, headers = headers, data='[{"componentId":"IGULD:SELF"}]', verify=False)
 
             # Check if a new acccess token is neccesary (TODO use refresh token)
             if (x.status_code == 401):
-                x = requests.post(loginurl, data = postdata)
+                x = requests.post(loginurl, data = postdata, verify=False)
                 token = x.json()["access_token"] 
                 headers = { "Authorization" : "Bearer " + token }
                 continue
