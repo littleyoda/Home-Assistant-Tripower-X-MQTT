@@ -19,7 +19,7 @@ urllib3.disable_warnings()
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.ERROR,
+    level=logging.WARNING,
     datefmt='%Y-%m-%d %H:%M:%S')
 
 
@@ -70,7 +70,7 @@ def sendUpdate(name, unique_id, uofm, mqtt_settings, device_info, value):
 
 
 def updateTripower(cfg, mqtt_settings):
-    logging.info("Starting Tripower-X Thread")
+    logging.warning("Starting Tripower-X Thread")
     loginurl = 'https://' + cfg["Address"] + '/api/v1/token'
     postdata = {'grant_type': 'password',
             'username': cfg["Username"],
@@ -149,7 +149,7 @@ def updateTripower(cfg, mqtt_settings):
 
 
 def updatePowerMeter(cfg, mqtt_settings):
-    logging.info("Starting Energie-Meter Thread")
+    logging.warning("Starting Energie-Meter Thread")
     MCAST_GRP = '239.12.255.254'
     MCAST_PORT = 9522
     IPBIND = '0.0.0.0'
