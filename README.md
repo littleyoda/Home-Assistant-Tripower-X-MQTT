@@ -1,5 +1,17 @@
 # Home-Assistant-Tripower-X-MQTT
 
+This script is obsolete.
+
+For a better Home Assistant integration see:
+https://github.com/littleyoda/ha-pysmaplus
+
+For a script that supports more devices and delivers the data also via mqtt, see:
+https://github.com/littleyoda/pysma/tree/master/scripts/pysma2mqtt
+
+
+
+## Description
+
 Script which reads out the current measured values of an inverter of the [SMA Tripower x (STP XX-50)](https://www.sma.de/produkte/solar-wechselrichter/sunny-tripower-x) series and makes them available via MQTT to Home Assistant.
 For other inverter and even for other SMA inverter series, the script will most likely not work.
 
